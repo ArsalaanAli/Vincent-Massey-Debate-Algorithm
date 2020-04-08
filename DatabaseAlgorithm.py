@@ -3,14 +3,11 @@ import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 #Google Sheet Database Connection
-
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('Debate_Data.json', scope)
 client = gspread.authorize(creds)
-
 sheet = client.open('Vincent Massey Debate Database').sheet1
 records = client.open('Vincent Massey Debate Database').get_worksheet(1)
-
 #test = sheet.get_all_records()
 #test2 = records.get_all_records()
 if records.cell(2, 6).value.lower() != "yes":
@@ -37,6 +34,7 @@ class team:
         return this.mem1
     def getPrev(this):
         return this.prev
+print('sadasdasdasd')
 #=================================================================================================#
 #File I/O With Google Drive Database
 teamId = sheet.col_values(1)
@@ -102,7 +100,7 @@ def findTeam(pt):
         elif pt == t.mem2.lower():
             return t
     else:
-        print("Unable to find this team")
+        print("Unable to find this team", pt)
         return 0
         
 team1 = []
@@ -215,18 +213,17 @@ def results():
         winner = int(wins[startR])
         gov = findTeam(gov.lower())
         opp = findTeam(opp.lower())
+        print(gov.mem1, "v.s.", opp.mem1)
         if winner == 1:
             pendingMatches.append([gov, opp])
         elif winner == 2:
             pendingMatches.append([opp, gov])
         if mark[startR] == "old start":
             break
-    records.update_cell(2, 6, "no")
     return pendingMatches
 
 def setPrev(tg, ts):
     tr = member1.index(tg.mem1)+1
-    print(tg.mem1, tr, tg.prev[0])
     sheet.update_cell(tr, 7, tg.prev[0])
     sheet.update_cell(tr, 6, ts.mem1)
 
@@ -247,6 +244,10 @@ def dpCalc(tm, op, res):
   #  tdp = int(sheet.cell(tr, 5).value)
     if res == "won":
         tdp+=10
+        if tm.dp < op.dp:
+            tdp += 3
+        else:
+            tdp -= 4
     elif res == "lost":
         tdp+=3
     #other factors for increasing score go here
@@ -286,6 +287,9 @@ def matchMakingAlgorithm():
 
 def recordKeep():
     matchResults = results()
+    contin = input("would you like to continue?(y/n): ")
+    if contin.lower() == 'n':
+        quit()
     getPrevs(matchResults)
     updateDp(matchResults)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
@@ -304,6 +308,3 @@ if runAlg == 1:
 if runAlg == 2:
     recordKeep()
 print("Exiting Program")
-
-
-
